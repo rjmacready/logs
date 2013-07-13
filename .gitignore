@@ -2,6 +2,9 @@
 *.fasl
 *.db
 *.out
+*.dat
+*.dot
+*.png
 out.*
 traceout.out.*
 
