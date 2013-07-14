@@ -1,7 +1,7 @@
 
 SYSLIBS=/usr/lib/ocaml/unix.cma
 
-all: out_p.png out_c.png out_mem.png
+all: out_p.png out_c.png out_mem.png out_mem2.png
 # a.out 
 
 clean:
@@ -18,4 +18,7 @@ out_c.png: out_c.dat
 
 
 out_mem.png: out_mem.dat
-	gnuplot -e "set term png; set title 'Memory usage'; plot \"out_mem.dat\" using 3:4 with lp; " > out_mem.png
+	gnuplot -e "set term png; set title 'Memory usage vs progress'; plot \"out_mem.dat\" using 3:4 with lp, \"out_mem.dat\" using 3:5 axes x1y2 with lp; " > out_mem.png
+
+out_mem2.png: out_mem.dat
+	gnuplot -e "set term png; set title 'Memory usage vs nestedness'; plot \"out_mem.dat\" using 3:4 with lp, \"out_mem.dat\" using 3:6 axes x1y2 with lp; " > out_mem2.png
