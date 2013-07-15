@@ -167,6 +167,12 @@
 	     ))
 	  nil))))
 
+(defun show-profile (id)
+  nil)
+
+(defun make-profile (id)
+  nil)
+
 (defun show-request (id)
   (declare (ignore id))
   (cl-who:with-html-output-to-string (s)
@@ -846,7 +852,7 @@
     (setf line (if (null line) 0 line))
     (open-file-or-dir file line))
 
-  (hunchentoot:define-easy-handler (tracels :uri "/tracels") (offset count)
+  (hunchentoot:define-easy-handler (tracesls :uri "/tracesls") (offset count)
     (when (null offset)
       (setf offset 0))
     (when (null count)
@@ -878,6 +884,20 @@
   (hunchentoot:define-easy-handler (codecov :uri "/codecov")
       (id)
     (show-code-cov id))
+
+  (hunchentoot:define-easy-handler (requestls :uri "/profilels") 
+      (offset count)
+    (if (null offset)
+	(setf offset 0)
+	(setf offset (parse-integer offset)))
+    (if (null count)
+	(setf count 20)
+	(setf count (parse-integer count)))
+    (make-profile offset count))
+
+  (hunchentoot:define-easy-handler (request :uri "/profile") 
+      (id)
+    (show-profile id))
 
   (hunchentoot:define-easy-handler (requestls :uri "/requestls") 
       (offset count)
