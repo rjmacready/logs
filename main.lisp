@@ -5,7 +5,9 @@
   (ql:quickload 'clsql-sqlite3)
   (ql:quickload 'cl-json)
   (ql:quickload 'parenscript)
-  (ql:quickload 'cl-fad))
+  (ql:quickload 'cl-fad)
+
+  (load "gnuplot-server/query.lisp"))
 
 
 ;(clsql:connect (list "logs.db") :database-type :sqlite3)
@@ -168,9 +170,11 @@
 	  nil))))
 
 (defun show-profile (id)
+  (declare (ignore id))
   nil)
 
-(defun make-profile (id)
+(defun make-profile (offset count)
+  (declare (ignore offset count))
   nil)
 
 (defun show-request (id)
@@ -352,67 +356,32 @@
 			    id
 			    offset
 			    count))
+     (declare (ignore cols))
      rows)))
 
+(defun rest-mem-progr-model ()
+  (cl-json:encode-json-to-string (get-info-files-memory)))
+
+(defun rest-trace-line-model (id)
+  (cl-json:encode-json-to-string (traceline-model id)))
 
 (defun show-trace (id)
   (cl-who:with-html-output-to-string (s)
     (:html
-     (:head 
-      (:script :src "js/underscore-min.js")
-      (:script :src "js/raphael-min.js")
-      (:script :src "js/sequence-diagram-min.js")
-      (:script :src "js/svginnerhtml.min.js")
-      (:script :src "js/prettify.js")
-      (:script :src "js/sigma.min.js")
-      (:script :src "js/sigma.forceatlas2.js")
-      (:script :src "js/jquery-2.0.2.min.js")
-;      (:script :id "rawdata" :type "rawdata"
-;	       (mapcar 
-;		(lambda (line)
-;		  (write-string (format nil "~a -> ~a: ~a~a" 
-;					(cl-ppcre:regex-replace-all
-;					 "[\\{\\}]|(\\-\\>)|(\\:\\:)" (nth 0 line) "_")
-;					
-;					(cl-ppcre:regex-replace-all
-;					 "[\\{\\}]|(\\-\\>)|(\\:\\:)" (nth 1 line) "_")
-;
-;					"bla"
-;					
-;					#\Newline) s))
-;		(trace-seq-diag-model id)))
-      
+     (:head      
       (:title "Trace"))
-     (:body
-      (:link :href "trace.css" :rel "stylesheet" :type "text/css")
+     (:body      
+      (:link :rel "stylesheet" :href "trace.css")
+      (:script :src "js/jquery-2.0.2.min.js")
+      (:script :src "js/flot/jquery.flot.js")
+
       (:script :src "trace.js")
-;      (:table :border "1"
-;      (:tr (:th "traceid")
-;	    (:th "function_no")
-;	    (:th "filename")
-;	    (:th "lineno")
-;	    (:th "function_name")
-;	    (:th "parent"))
-;       (multiple-value-bind (cols lines) (trace-line-model id)
-;	 (let ((id (position "id" cols :test #'equal))
-;	       (function-no (position "function_no" cols :test #'equal))
-;	       (filename (position "filename" cols :test #'equal))
-;	       (lineno (position "lineno" cols :test #'equal))
-;	       (function-name (position "function_name" cols :test #'equal))
-;	       (parent (position "parent" cols :test #'equal)))
-;
-;	       (mapcar
-;		(lambda (line)
-;		  (cl-who:htm
-;		   (:tr (:td (cl-who:str (nth id line)))
-;			(:td (cl-who:str (nth function-no line)))
-;			(:td (cl-who:str (nth filename line)))
-;			(:td (cl-who:str (nth lineno line)))
-;			(:td (cl-who:str (nth function-name line)))
-;			(:td (cl-who:str (nth parent line))))))
-;		 lines))))
-       (:div :id "diagram")
-       (:div :class "span12 sigma-parent" :id "sig")))))
+
+      (:div (cl-who:fmt "Trace ~a" id))
+      (:div :id "placeholder")
+      (:div :id "info_selected")
+      (:div :id "more_info")
+      ))))
 
 
 (defun make-trace (offset count)
@@ -912,6 +881,14 @@
   (hunchentoot:define-easy-handler (request :uri "/request") 
       (id)
     (show-request id))
+
+  (hunchentoot:define-easy-handler (rest-mem-progr-content :uri "/rest/trace/memprogr")
+      ()
+    (rest-mem-progr-model))
+
+  (hunchentoot:define-easy-handler (rest-trace-line-content :uri "/rest/trace/line")
+      (id)
+    (rest-trace-line-model id))
 
   (hunchentoot:define-easy-handler (rest-get-file-content :uri "/rest/file/server") 
       (filename)

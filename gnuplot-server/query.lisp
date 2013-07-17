@@ -53,7 +53,7 @@ order by sumSelfCost desc ;"))) ;  limit 25
 	 rows)
 	nil))))
 
-(make-dat-files-profiling)
+;(make-dat-files-profiling)
 
 (defun make-dat-files-calls ()
   (clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
@@ -69,7 +69,57 @@ order by sumSelfCost desc ;"))) ;  limit 25
 	rows))
       nil)))
 
-(make-dat-files-calls)
+;(make-dat-files-calls)
+
+(defun traceline-model (id)
+  (let* ((rows (clsql:query
+	       (format nil "SELECT id, traceid, level, function_no, kind, timeoffset, memory, function_name, deftype, filename, included, lineno, parent FROM tracelinestore WHERE id = ~a" id)))
+	 (row (car rows))) 
+    (let ((id (first row))
+	  (traceid (second row))
+	  (level (third row))
+	  (function_no (fourth row))
+	  (kind (fifth row))
+	  (timeoffset (sixth row))
+	  (memory (seventh row))
+	  (function_name (eighth row))
+	  (ddeftype (ninth row))
+	  (filename (tenth row))
+	  (included (nth 10 row))
+	  (lineno (nth 11 row))
+	  (parent (nth 12 row)))
+      `((:id . ,id)
+	(:traceid . ,traceid)
+	(:level . ,level)
+	(:function_no . ,function_no)
+	(:kind . ,kind)
+	(:timeoffset . ,timeoffset)
+	(:memory . ,memory)
+	(:function_name . ,function_name)
+	(:deftype . ,ddeftype)
+	(:filename . ,filename)
+	(:included . ,included)
+	(:lineno . ,lineno)
+	(:parent . ,parent)))))
+
+(defun get-info-files-memory ()
+  (clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
+    (let* ((rows (clsql:query
+		  (format nil "SELECT id, timeoffset, memory FROM tracelinestore WHERE traceid = 9 ;")))
+	   (lastmem (third (car rows))))
+      (mapcar
+       (lambda (row)
+	 (let ((id (first row))				
+	       (timeoffset (second row))
+	       (memory (third row)))
+	   (prog1
+	       `((:id . ,id)
+		 (:timeoffset . ,timeoffset)
+		 (:memory . ,memory)
+		 (:memorydelta . ,(- memory lastmem)))
+	     (setf lastmem memory))))
+       rows))))
+
 
 (defun make-dat-files-memory ()
   (clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
@@ -78,18 +128,18 @@ order by sumSelfCost desc ;"))) ;  limit 25
        (lambda (trace)
 	 ;(print `(trace ,trace))
 	 (let ((traceid (car trace)))
-	   (with-open-stream (*standard-output* (open (format nil "out_mem.dat" traceid) :direction :output :if-exists :supersede))
-	     (let ((*c* 0)
+	   (with-open-stream (*standard-output* (open (format nil "out_mem_~a.dat" traceid) :direction :output :if-exists :supersede))
+	     (let ((c 0)
 		   (i 1))
 	       (loop 
 		  for x from 0 by 10000 
 		  do (progn
-		       (setf *c* 0)
+		       (setf c 0)
 		       (let ((rows (clsql:query
 				    (format nil "SELECT traceid, id, timeoffset, memory, level FROM tracelinestore WHERE traceid = ~a limit ~a, 10000;" traceid x))))
 			 (mapc 
 			  (lambda (row)
-			    (setf *c* (1+ *c*))
+			    (setf c (1+ c))
 			    (setf i (1+ i))
 			    (write-string 
 			     (format nil "~a ~a ~f ~a ~a ~a ~a" 
@@ -102,8 +152,8 @@ order by sumSelfCost desc ;"))) ;  limit 25
 				     #\Newline)))
 			  rows)
 			 nil))
-		  while (eq *c* 10000)))))) 
+		  while (eq c 10000)))))) 
        traces)
       nil)))
 
-(make-dat-files-memory)
+;(make-dat-files-memory)

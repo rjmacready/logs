@@ -1,7 +1,7 @@
 
 SYSLIBS=/usr/lib/ocaml/unix.cma
 
-all: out_p.png out_c.png out_mem.png out_mem2.png
+all: out_p.png out_c.png out_mem.png out_mem2.png out_c.html out_c.svg
 # a.out 
 
 clean:
@@ -22,3 +22,9 @@ out_mem.png: out_mem.dat
 
 out_mem2.png: out_mem.dat
 	gnuplot -e "set term png; set title 'Memory usage vs nestedness'; plot \"out_mem.dat\" using 3:4 with lp, \"out_mem.dat\" using 3:6 axes x1y2 with lp; " > out_mem2.png
+
+out_c.html: out_c.dat
+	gnuplot -e "set term canvas standalone mousing; set title 'Function calls'; set style data histograms; set style histogram clustered; set style fill solid 1.0 border lt -1; plot [-1:50] \"out_c.dat\" using 2 " > out_c.html
+
+out_c.svg: out_c.dat
+	gnuplot -e "set term svg mousing; set title 'Function calls'; set style data histograms; set style histogram clustered; set style fill solid 1.0 border lt -1; plot [-1:50] \"out_c.dat\" using 2 " > out_c.svg
