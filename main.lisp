@@ -359,6 +359,12 @@
      (declare (ignore cols))
      rows)))
 
+(defun rest-profile-line-model (id function-name)
+  (cl-json:encode-json-to-string (profile-line-function-model id function-name)))
+
+(defun rest-profile-timefunc-model ()
+  (cl-json:encode-json-to-string (files-spent-model)))
+
 (defun rest-mem-progr-model ()
   (cl-json:encode-json-to-string (get-info-files-memory)))
 
@@ -374,10 +380,15 @@
       (:link :rel "stylesheet" :href "trace.css")
       (:script :src "js/jquery-2.0.2.min.js")
       (:script :src "js/flot/jquery.flot.js")
+      (:script :src "js/flot/jquery.flot.stack.js")
 
       (:script :src "trace.js")
 
       (:div (cl-who:fmt "Trace ~a" id))
+      
+      (:div (:a :id "memdeltatime" :href "#" "Memory delta/Time") (:br)
+	    (:a :id "timespentfunction" :href "#" "Time spent / function"))
+      
       (:div :id "placeholder")
       (:div :id "info_selected")
       (:div :id "more_info")
@@ -881,6 +892,14 @@
   (hunchentoot:define-easy-handler (request :uri "/request") 
       (id)
     (show-request id))
+
+  (hunchentoot:define-easy-handler (rest-profile-line-content :uri "/rest/profile/line")
+      (id function-name)
+    (rest-profile-line-model id function-name))
+
+  (hunchentoot:define-easy-handler (rest-profile-timefunc-content :uri "/rest/profile/timefunc")
+      ()
+    (rest-profile-timefunc-model))
 
   (hunchentoot:define-easy-handler (rest-mem-progr-content :uri "/rest/trace/memprogr")
       ()

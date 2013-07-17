@@ -1,0 +1,17 @@
+.wrapper {
+    position: relative;
+}
+
+.files-column {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+}
+
+.code-column {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60%;
+}

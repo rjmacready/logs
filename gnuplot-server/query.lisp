@@ -71,6 +71,81 @@ order by sumSelfCost desc ;"))) ;  limit 25
 
 ;(make-dat-files-calls)
 
+; id|cmdid|function_name|lnr|cost
+; id|cmdid|function_name|lnr|cost|filename
+
+(defun profile-line-function-model (id function-name)
+  (let ((rows (clsql:query 
+	       (format nil "
+   select 1 as iscall, id, cmdid, function_name, lnr, cost, '' as filename
+   from profilecallstore
+   where cmdid = 50 and function_name = '~a'
+      union all
+   select 0 as iscall, id, cmdid, function_name, lnr, cost, filename
+   from profileinvstore
+   where cmdid = 50 and function_name = '~a'
+
+;
+" function-name function-name))))
+    
+    (mapcar
+     (lambda (row)
+       `((:iscall . ,(first row))
+	 (:id . ,(second row))
+	 (:cmdid . ,(third row))
+	 (:function-name . ,(fourth row))
+	 (:lnr . ,(fifth row))
+	 (:cost . ,(sixth row))
+	 (:filename . ,(seventh row))))
+     rows)))
+
+(defun files-spent-model ()  
+  (let ((rows (clsql:query "
+select
+   aux.function_name,
+   sumSelfCost,
+   nrInvocations,
+   avgCost,
+   ratioCost,
+   sumSelfCost + coalesce(sumCost, 0) as sumInclCost,
+   sumSelfCost / (1.0 * sumSelfCost + coalesce(sumCost, 0)) as ratioInclCost
+from (
+   select
+      function_name,
+      sum(cost) sumSelfCost,
+      count(*) nrInvocations,
+      avg(cost) avgCost,
+      avg(cost) / sum(cost) ratioCost
+   from profilecallstore
+   where cmdid = 50
+   group by function_name) aux left join (
+      select function_name, sum(cost) sumCost
+      from profileinvstore
+      where cmdid = 50
+      group by function_name
+   ) aux2 on aux.function_name = aux2.function_name
+order by sumSelfCost desc ;"))) ;  limit 25
+    (mapcar
+     (lambda (row)
+       (let ((function-name (first row))
+	     (sum-self-cost (second row))
+	     (nr-invocations (third row))
+	     (avg-cost (fourth row))
+	     (ratio-cost (fifth row))
+	     (sum-incl-cost (sixth row))
+	     (ratio-incl-cost (seventh row)))
+	 
+	 `((:function-name . ,function-name)
+	   (:sum-self-cost . ,sum-self-cost)
+	   (:nr-invocations . ,nr-invocations)
+	   (:avg-cost . ,avg-cost)
+	   (:ratio-cost . ,ratio-cost)
+	   (:sum-incl-cost . ,sum-incl-cost)
+	   (:ratio-incl-cost . ,ratio-incl-cost))))
+     rows)))
+
+
+
 (defun traceline-model (id)
   (let* ((rows (clsql:query
 	       (format nil "SELECT id, traceid, level, function_no, kind, timeoffset, memory, function_name, deftype, filename, included, lineno, parent FROM tracelinestore WHERE id = ~a" id)))
