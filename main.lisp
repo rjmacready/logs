@@ -169,14 +169,6 @@
 	     ))
 	  nil))))
 
-(defun show-profile (id)
-  (declare (ignore id))
-  nil)
-
-(defun make-profile (offset count)
-  (declare (ignore offset count))
-  nil)
-
 (defun show-request (id)
   (declare (ignore id))
   (cl-who:with-html-output-to-string (s)
@@ -362,11 +354,11 @@
 (defun rest-profile-line-model (id function-name)
   (cl-json:encode-json-to-string (profile-line-function-model id function-name)))
 
-(defun rest-profile-timefunc-model ()
-  (cl-json:encode-json-to-string (files-spent-model)))
+(defun rest-profile-timefunc-model (id)
+  (cl-json:encode-json-to-string (files-spent-model id)))
 
-(defun rest-mem-progr-model ()
-  (cl-json:encode-json-to-string (get-info-files-memory)))
+(defun rest-mem-progr-model (id)
+  (cl-json:encode-json-to-string (get-info-files-memory id)))
 
 (defun rest-trace-line-model (id)
   (cl-json:encode-json-to-string (traceline-model id)))
@@ -382,12 +374,14 @@
       (:script :src "js/flot/jquery.flot.js")
       (:script :src "js/flot/jquery.flot.stack.js")
 
+      (:script (cl-who:str 
+		(parenscript:ps* `(defvar traceid ,id))))
+
       (:script :src "trace.js")
 
       (:div (cl-who:fmt "Trace ~a" id))
       
-      (:div (:a :id "memdeltatime" :href "#" "Memory delta/Time") (:br)
-	    (:a :id "timespentfunction" :href "#" "Time spent / function"))
+      (:div (:a :id "memdeltatime" :href "#" "Memory delta/Time"))
       
       (:div :id "placeholder")
       (:div :id "info_selected")
@@ -415,6 +409,72 @@
 			      "Open this trace")))))
 	     rows)))))))))
 
+(defun profile-cmd-list (profileid offset count)
+  (multiple-value-bind (rows cols) (clsql:query (format nil "SELECT id, cmd FROM profilecmdstore WHERE profileid = ~a LIMIT ~a, ~a; " profileid offset count))
+    (values rows cols)))
+
+(defun show-cmd-profile (id)
+  (cl-who:with-html-output-to-string (s)
+    (:html
+     (:head (:title "Profile Cmd"))
+     (:body
+      (cl-who:htm
+       (:link :rel "stylesheet" :href "trace.css")
+       (:script :src "js/jquery-2.0.2.min.js")
+       (:script :src "js/flot/jquery.flot.js")
+       (:script :src "js/flot/jquery.flot.stack.js")
+       
+       (:script (cl-who:str (parenscript:ps* `(defvar cmdid ,id))))
+       (:script :src "profilecmd.js")
+       (:div (:a :id "timespentfunction" :href "#" "Time spent / function"))
+      
+      (:div :id "placeholder")
+      (:div :id "info_selected")
+      (:div :id "more_info"))))))
+
+(defun profile-list (offset count)
+  (multiple-value-bind (rows cols) (clsql:query (format nil "SELECT id, filename FROM profilestore LIMIT ~a, ~a; " offset count))
+    (values rows cols)))
+
+(defun show-profile (id)
+  (cl-who:with-html-output-to-string (s)
+    (:html
+     (:head (:title "Profile"))
+     (:body
+      (:table :border "1"
+      (multiple-value-bind (rows cols) 
+	   (profile-cmd-list id 0 999)
+	 (cl-who:htm 
+	  (:tr (:th "cmd") (:th "link"))
+	  (let ((cmd (position "cmd" cols :test #'equal))
+		(id (position "id" cols :test #'equal)))
+	    (mapcar 
+	     (lambda (row)
+	       (cl-who:htm
+		(:tr (:td (cl-who:fmt "~a" (nth cmd row))) 
+		     (:td (:a :href (format nil "/profilecmd?id=~a" (nth id row)) 
+			      "Open this profile")))))
+	     rows)))))))))
+
+(defun make-profile (offset count)
+  (cl-who:with-html-output-to-string (s)
+    (:html 
+     (:head (:title "Profiles"))
+     (:body
+      (:table :border "1"
+      (multiple-value-bind (rows cols) 
+	   (profile-list offset count)
+	 (cl-who:htm 
+	  (:tr (:th "filename") (:th "link"))
+	  (let ((filename (position "filename" cols :test #'equal))
+		(id (position "id" cols :test #'equal)))
+	    (mapcar 
+	     (lambda (row)
+	       (cl-who:htm
+		(:tr (:td (cl-who:fmt "~a" (nth filename row))) 
+		     (:td (:a :href (format nil "/profile?id=~a" (nth id row)) 
+			      "Open this profile")))))
+	     rows)))))))))
 
 
 (defun make-next (cont-id)
@@ -721,7 +781,8 @@
        (:h2 "Listings")
        (:div (:a :href "/codecovls" "All code coverages from xdebug"))
        (:div (:a :href "/requestls" "All requests logged"))
-       (:div (:a :href "/tracesls" "All traces gathered")))
+       (:div (:a :href "/tracesls" "All traces gathered"))
+       (:div (:a :href "/profilels" "All profiles gathered")))
       (:div
        (:h2 "Configurations")
        (:div (:a :href "/configprofile" "Configuration profiles")))))))
@@ -865,7 +926,7 @@
       (id)
     (show-code-cov id))
 
-  (hunchentoot:define-easy-handler (requestls :uri "/profilels") 
+  (hunchentoot:define-easy-handler (profilels :uri "/profilels") 
       (offset count)
     (if (null offset)
 	(setf offset 0)
@@ -875,10 +936,14 @@
 	(setf count (parse-integer count)))
     (make-profile offset count))
 
-  (hunchentoot:define-easy-handler (request :uri "/profile") 
+  (hunchentoot:define-easy-handler (showprofilecontent :uri "/profile") 
       (id)
     (show-profile id))
 
+  (hunchentoot:define-easy-handler (showprofilecmdcontent :uri "/profilecmd") 
+      (id)
+    (show-cmd-profile id))
+  
   (hunchentoot:define-easy-handler (requestls :uri "/requestls") 
       (offset count)
     (if (null offset)
@@ -898,12 +963,12 @@
     (rest-profile-line-model id function-name))
 
   (hunchentoot:define-easy-handler (rest-profile-timefunc-content :uri "/rest/profile/timefunc")
-      ()
-    (rest-profile-timefunc-model))
+      (id)
+    (rest-profile-timefunc-model id))
 
   (hunchentoot:define-easy-handler (rest-mem-progr-content :uri "/rest/trace/memprogr")
-      ()
-    (rest-mem-progr-model))
+      (id)
+    (rest-mem-progr-model id))
 
   (hunchentoot:define-easy-handler (rest-trace-line-content :uri "/rest/trace/line")
       (id)

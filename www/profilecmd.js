@@ -82,116 +82,12 @@ var plot = null;
 $(function() {
     var chartData;
 
-    var getDataMemDeltaByTime = function(cb) {	
-	console.log('data mem: start');
-	var axisy = {
-	    min : 0,
-	    max : 0
-	};
-	var axisx = {
-	    min : 0,
-	    max : 0
-	};
-	
-	$.ajax({
-	    type : "GET",
-	    url : "/rest/trace/memprogr",
-	    data : {
-		id : traceid
-	    },
-	    dataType : "json",
-	    success : function(data){
-		console.log('success callback: start');
-
-		var mem = [], pos = [], i = 1;
-
-		data.forEach(function(e, idx){
-
-		    var memorydelta = +e['memorydelta'];
-		    var timeoffset = +e['timeoffset'];
-		    
-		    axisy.min = min(axisy.min, memorydelta);
-		    axisy.max = max(axisy.max, memorydelta);
-
-		    axisx.min = min(axisx.min, timeoffset);
-		    axisx.max = max(axisx.max, timeoffset);
-
-		    mem.push([timeoffset, memorydelta]);
-		    pos.push([timeoffset, i++]);
-		});
-		console.log('success callback: data ok');
-
-		chartData = data;
-		
-		cb([{ data: mem, label: 'Memory Delta'},
-		    { data: pos, label: 'Function Call', yaxis: 2}], 
-		   {
-		       series : {
-			   lines : {
-			       show: true
-			   },
-			   points : {
-			       show: true
-			   }
-		       },
-		       grid : {
-			   hoverable : true,
-			   clickable : true
-		       },
-		       yaxes : [{
-			   position: "left",
-			   tickFormatter: sizeFormatter,
-			   min : axisy.min, 
-			   max : axisy.max,
-
-			   ticks : function(axis){
-			       var min = axis.min, max = axis.max;
-			       var lmin = superLog(min), lmax = superLog(max);
-			       var res = [];
-			       
-			       // find decent split ...
-			       // lets try to aim to 12 ticks 
-			       // it would be cute if one of them was zero
-			       var step = (lmax - lmin) / 12, val = NaN;
-
-			       var real_start = Math.ceil(lmin / step) * step;
-
-			       for(var i = 0; i < 12; ++i) {
-				   val = superExp( (real_start + i * step) );
-				   res.push([val, sizeFormatter(val)]);
-			       }
-			       axis.min = superExp(real_start);
-
-			       return res;
-			   },
-
-			   transform: superLog,
-			   inverseTransform: superExp,			   
-		       },{
-			   position: "right",
-			   min : 0,
-			   max : i,
-		       }],
-		       xaxis : {
-			   min : axisx.min,
-			   max : axisx.max,
-		       }
-		   });
-		
-		console.log('success callback: end');
-	    }
-	});
-
-	console.log('data mem: end');
-    };
-
-
     var getDataTimeSpentFunc = function(cb) {
 	$.ajax({
 	    type : 'GET',
 	    url : '/rest/profile/timefunc',
 	    data : {
-		id: traceid
+		id: cmdid
 	    },
 	    dataType : "json",
 	    success: function(data) {
@@ -299,43 +195,6 @@ $(function() {
 	    });
 
 	});
-    });
-
-    $("#memdeltatime").click(function() {
-	getDataMemDeltaByTime(function(data, options) {
-	    console.log('make plot callback: start');
-
-	    // make the plot
-	    plot = $.plot('#placeholder', data, options);
-
-	    console.log('make plot callback: plot done');
-	
-	    $("#placeholder").bind("plotclick", function(event, pos, item) {
-		if(!item) return;
-		
-		var xcoord = item.datapoint[0];
-		chartData.first(function(t) {
-		    return t['timeoffset'] == xcoord;
-		}, function(row) {
-		    $('#info_selected').text('Original row: ' + JSON.stringify(row));
-		    
-		    $.ajax({
-			type : 'GET',
-			url : '/rest/trace/line',
-			data : {
-			    id : row['id']
-			},
-			
-			success : function(rawdata) {
-			    $('#more_info').text(rawdata);
-			}
-		    });		    
-		});		
-	    });	
-
-	    console.log('make plot callback: end');
-	});
-    });
-    
+    });    
     
 });

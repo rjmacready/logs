@@ -79,14 +79,14 @@ order by sumSelfCost desc ;"))) ;  limit 25
 	       (format nil "
    select 1 as iscall, id, cmdid, function_name, lnr, cost, '' as filename
    from profilecallstore
-   where cmdid = 50 and function_name = '~a'
+   where cmdid = ~a and function_name = '~a'
       union all
    select 0 as iscall, id, cmdid, function_name, lnr, cost, filename
    from profileinvstore
-   where cmdid = 50 and function_name = '~a'
+   where cmdid = ~a and function_name = '~a'
 
 ;
-" function-name function-name))))
+" id function-name id function-name))))
     
     (mapcar
      (lambda (row)
@@ -99,8 +99,21 @@ order by sumSelfCost desc ;"))) ;  limit 25
 	 (:filename . ,(seventh row))))
      rows)))
 
-(defun files-spent-model ()  
-  (let ((rows (clsql:query "
+(defun condition-to-sql (condition)
+  (when (null condition)
+    (error "No condition!"))
+  nil)
+
+(defun conditions-to-sql (conditions)
+  (if (null conditions)
+      nil
+      (mapcar
+       #'condition-to-sql
+       conditions)))
+
+(defun files-spent-model (id &optional (conditions nil))  
+  (declare (ignore conditions))
+  (let ((rows (clsql:query (format nil "
 select
    aux.function_name,
    sumSelfCost,
@@ -117,14 +130,14 @@ from (
       avg(cost) avgCost,
       avg(cost) / sum(cost) ratioCost
    from profilecallstore
-   where cmdid = 50
+   where cmdid = ~a
    group by function_name) aux left join (
       select function_name, sum(cost) sumCost
       from profileinvstore
-      where cmdid = 50
+      where cmdid = ~a
       group by function_name
    ) aux2 on aux.function_name = aux2.function_name
-order by sumSelfCost desc ;"))) ;  limit 25
+order by sumSelfCost desc ;" id id)))) ;  limit 25
     (mapcar
      (lambda (row)
        (let ((function-name (first row))
@@ -177,10 +190,10 @@ order by sumSelfCost desc ;"))) ;  limit 25
 	(:lineno . ,lineno)
 	(:parent . ,parent)))))
 
-(defun get-info-files-memory ()
+(defun get-info-files-memory (id)
   (clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
     (let* ((rows (clsql:query
-		  (format nil "SELECT id, timeoffset, memory FROM tracelinestore WHERE traceid = 9 ;")))
+		  (format nil "SELECT id, timeoffset, memory FROM tracelinestore WHERE traceid = ~a ;" id)))
 	   (lastmem (third (car rows))))
       (mapcar
        (lambda (row)
@@ -195,40 +208,32 @@ order by sumSelfCost desc ;"))) ;  limit 25
 	     (setf lastmem memory))))
        rows))))
 
+(defun to-dat-file (output filename)
+  (with-open-stream (*standard-output* (open filename :direction :output :if-exists :supersede))
+    (mapc
+     (lambda (row)
+       (loop for c in row
+	    do (let ((c1 (cdr c)))
+		 ;(format T "~S" (type-of c1))
+		 (typecase c1
+		   (double-float (format T "~,8f" c1))
+		   (otherwise (format T "~S" c1))))
+	    when (cdr c) do (write-char #\Space))
+       (write-char #\Newline)
+       nil)
+     output)
+    nil))
 
 (defun make-dat-files-memory ()
-  (clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
-    (let ((traces (clsql:query "SELECT id FROM tracestore WHERE id = 9")))
+  ;(clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
+    (let ((traces (clsql:query "SELECT id FROM tracestore; "))) ;  WHERE id = 9
       (mapc 
        (lambda (trace)
 	 ;(print `(trace ,trace))
 	 (let ((traceid (car trace)))
-	   (with-open-stream (*standard-output* (open (format nil "out_mem_~a.dat" traceid) :direction :output :if-exists :supersede))
-	     (let ((c 0)
-		   (i 1))
-	       (loop 
-		  for x from 0 by 10000 
-		  do (progn
-		       (setf c 0)
-		       (let ((rows (clsql:query
-				    (format nil "SELECT traceid, id, timeoffset, memory, level FROM tracelinestore WHERE traceid = ~a limit ~a, 10000;" traceid x))))
-			 (mapc 
-			  (lambda (row)
-			    (setf c (1+ c))
-			    (setf i (1+ i))
-			    (write-string 
-			     (format nil "~a ~a ~f ~a ~a ~a ~a" 
-				     (nth 0 row)
-				     (nth 1 row)
-				     (nth 2 row)
-				     (nth 3 row)
-				     i
-				     (nth 4 row)
-				     #\Newline)))
-			  rows)
-			 nil))
-		  while (eq c 10000)))))) 
+	   (to-dat-file (get-info-files-memory traceid) (format nil "trace.~a.out" traceid)))) 
        traces)
-      nil)))
+      nil));)
 
-;(make-dat-files-memory)
+(when nil
+  (make-dat-files-memory))
