@@ -8,3 +8,8 @@
 out.*
 traceout.out.*
 
+# Ocaml stuff
+*.annot
+*.cmi
+*.cmo
+*.cmt
