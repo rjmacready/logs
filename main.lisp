@@ -10,7 +10,7 @@
   (load "gnuplot-server/query.lisp"))
 
 
-;(clsql:connect (list "logs.db") :database-type :sqlite3)
+;clsql:connect (list "logs.db") :database-type :sqlite3)
 
 (defun index-of-column (col-name cols-list)
   (position col-name cols-list :test #'equal))
