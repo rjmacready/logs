@@ -234,6 +234,24 @@ order by sumSelfCost desc ;" id id)))) ;  limit 25
        traces)
       nil))
 
+
+(defun get-root (trace-id)
+  (let ((line (car (clsql:query (format nil "SELECT function_no, function_name FROM tracelinestore WHERE parent is null AND traceid = ~a " trace-id)))))
+    `((:function-no . ,(first line))
+      (:function-name . ,(second line)))))
+
+
+(defun get-childs-of (trace-id parent-id)
+  (let ((lines (clsql:query
+		(format nil "SELECT function_no, function_name, parent FROM tracelinestore WHERE traceid = ~a AND parent = ~a" trace-id parent-id))))
+    (mapcar
+     (lambda (traceline)
+       `((:function-no . ,(first traceline))
+	 (:function-name . ,(second traceline))
+	 (:parent . ,(third traceline))))
+      lines)))
+
+
 (when nil
   (handler-bind      
     ((CLSQL-SYS:SQL-CONNECTION-ERROR 

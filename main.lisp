@@ -9,8 +9,10 @@
 
   (load "gnuplot-server/query.lisp"))
 
+(defparameter *conts* (make-hash-table))
 
-;clsql:connect (list "logs.db") :database-type :sqlite3)
+(when nil
+  (clsql:connect (list "logs.db") :database-type :sqlite3))
 
 (defun index-of-column (col-name cols-list)
   (position col-name cols-list :test #'equal))
@@ -332,7 +334,11 @@
 			      "Open this coverage")))))
 	     rows)))))))))
 
+(defun rest-get-root (id)
+  (cl-json:encode-json-to-string (get-root id)))
 
+(defun rest-get-childs-of (id parent)
+  (cl-json:encode-json-to-string (get-childs-of id parent)))
 
 (defun trace-seq-diag-model (id)
   (multiple-value-bind (rows cols)
@@ -363,6 +369,20 @@
 (defun rest-trace-line-model (id)
   (cl-json:encode-json-to-string (traceline-model id)))
 
+(defun show-calls-viz (id)
+  (cl-who:with-html-output-to-string (s)
+    (:html
+     (:head
+      (:title "Calls Viz"))
+     (:body
+      (:script :src "js/jquery-2.0.2.min.js")
+      (:script :src "js/kinetic-v4.5.4.min.js")
+      (:script :src "callsviz.js")
+      (:script (cl-who:str 
+		(parenscript:ps* `(defvar traceid ,id))))
+      
+      (:div :id "container")))))
+
 (defun show-trace (id)
   (cl-who:with-html-output-to-string (s)
     (:html
@@ -381,7 +401,8 @@
 
       (:div (cl-who:fmt "Trace ~a" id))
       
-      (:div (:a :id "memdeltatime" :href "#" "Memory delta/Time"))
+      (:div (:a :id "memdeltatime" :href "#" "Memory delta/Time") (:br)
+	    (:a :href (format nil "callsviz?id=~a" id) "Calls Viz"))
       
       (:div :id "placeholder")
       (:div :id "info_selected")
@@ -551,11 +572,6 @@
 
 
 (defun save-log (data)
-;  (declare (ignore data))
-;  (print data *standard-output*)
-  ; (json:decode-json-from-string data)
-;  (print data)
-;  (print "ok")
   (let ((res (clsql:execute-command 
 	      (format nil "insert into valuestore (ts, content) values(~a, '~a')" (get-universal-time) data)))) 
     (format nil "~a ~a ~a" data "ok" res))
@@ -626,14 +642,6 @@
 						   tab-mode "shift")))
 					   nil))))
 		  ))
-;      (:div
-;       (let ((dirs (cdr (pathname-directory (probe-file file))))) 
-;	 (mapcar
-;	  (lambda (d) (cl-who:htm (:div (:a :href 
-;					    (format nil "/file?file=~a" d)
-;					    (cl-who:str d))))) ;  :style "float: left;"
-;	  dirs))
-;       ) ;(:div)  :style "display: block;"
 
 	(:div
 	 (cl-who:htm
@@ -651,14 +659,13 @@
 		(reverse dirs))))))))
 
 	(:div 
-	 ;(let ((dir (make-pathname :directory (pathname-directory file))))
 	   (cl-who:htm
 	    (:div (:b "Listing"))
 	    (mapcar 
 	     (lambda (n) 
 	       (cl-who:htm (:div (:a :href (format nil "/file?file=~a" n) (cl-who:str n)))))
 	     (list-dir file)))
-	   );)
+	   )
 	
 		 
 	(when (not (directory-pathname-p file))
@@ -667,24 +674,7 @@
 	    (:div (:b "File"))
 	    (:div (cl-who:str file))
 	    (:textarea :id "code" (cl-who:str (read-file-to-string file)))))
-	  
-;       (cl-who:htm
-;	(:div (cl-who:str (get-content (pathname file))))
-;	(:div 
-;	 (cl-who:htm
-;	  (mapcar
-;	   (lambda (n)
-;	     (cl-who:htm (:div 
-;			   (:a :name (first n)
-;			       (cl-who:fmt "~a: ~a" (first n) (second n))
-;			   )
-;			  ))
-;	     )
-;	   (read-file-to-list (pathname file))
-;	   )
-	 ))
-       )
-      )))
+	 ))))))
 
 
 
@@ -925,6 +915,15 @@
   (hunchentoot:define-easy-handler (codecov :uri "/codecov")
       (id)
     (show-code-cov id))
+
+  (hunchentoot:define-easy-handler (trace-get-root :uri "/rest/trace/get-root") (id)
+    (rest-get-root id))
+
+  (hunchentoot:define-easy-handler (trace-get-childs-of :uri "/rest/trace/get-childs-of") (id parent)
+    (rest-get-childs-of id parent))
+
+  (hunchentoot:define-easy-handler (callsviz :uri "/callsviz") (id)
+    (show-calls-viz id))
 
   (hunchentoot:define-easy-handler (profilels :uri "/profilels") 
       (offset count)
