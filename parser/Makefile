@@ -1,6 +1,6 @@
 
 
-all: main.out parsefile.out
+all: main.out parsefile.out pli.out
 
 SYSLIBS=/usr/lib/ocaml/unix.cma \
  /usr/lib/ocaml/str.cma \
@@ -24,16 +24,6 @@ LIBSPF=$(LIBS) \
  $(PFROOT)/matcher/lib.cma \
  $(PFROOT)/lang_php/parsing/lib.cma
 
-#  $(PFROOT)/lang_php/analyze/lib.cma \
- $(PFROOT)/lang_php/analyze/checker/lib.cma \
- $(PFROOT)/lang_php/analyze/foundation/lib.cma \
- $(PFROOT)/lang_php/analyze/tools/lib.cma \
- $(PFROOT)/lang_php/analyze/visual/lib.cma \
- $(PFROOT)/lang_php/analyze/qa_test/lib.cma \
-
-#  $(PFROOT)/globals/lib.cma \
-
-
 INCLUDESPF=$(INCLUDES) \
  -I $(PFROOT)/commons \
  -I $(PFROOT)/commons/lib-sexp \
@@ -42,11 +32,23 @@ INCLUDESPF=$(INCLUDES) \
  -I $(PFROOT)/lang_php/parsing \
  -I $(PFROOT)/h_version-control
 
+LIBSPF2=$(LIBSPF) \
+ $(PFROOT)/lang_php/analyze/foundation/lib.cma \
+ $(PFROOT)/code_map/lib.cma
+
+INCLUDESPF2=$(INCLUDESPF) \
+ -I $(PFROOT)/lang_php/analyze/foundation \
+ -I $(PFROOT)/code_map
+
 main.out: main.ml
 	ocamlc $(FLAGS) -o $@ -custom $(SYSLIBS) $(LIBS) $(INCLUDES) $^ -cclib -lunix -cclib -lpcre
 
 parsefile.out: parsefile.ml
 	ocamlc $(FLAGS) -o $@ -custom $(SYSLIBSPF) $(LIBSPF) $(INCLUDESPF) $^ -cclib -lunix -cclib -lpcre
+
+pli.out: pli.ml
+	ocamlc $(FLAGS) -o $@ -custom $(SYSLIBSPF) $(LIBSPF2) $(INCLUDESPF2) $^ -cclib -lunix -cclib -lpcre
+
 
 clean: 
 	rm -f *.out

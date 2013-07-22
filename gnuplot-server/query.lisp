@@ -191,7 +191,7 @@ order by sumSelfCost desc ;" id id)))) ;  limit 25
 	(:parent . ,parent)))))
 
 (defun get-info-files-memory (id)
-  (clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
+  ;(clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
     (let* ((rows (clsql:query
 		  (format nil "SELECT id, timeoffset, memory FROM tracelinestore WHERE traceid = ~a ;" id)))
 	   (lastmem (third (car rows))))
@@ -206,7 +206,7 @@ order by sumSelfCost desc ;" id id)))) ;  limit 25
 		 (:memory . ,memory)
 		 (:memorydelta . ,(- memory lastmem)))
 	     (setf lastmem memory))))
-       rows))))
+       rows)));)
 
 (defun to-dat-file (output filename)
   (with-open-stream (*standard-output* (open filename :direction :output :if-exists :supersede))
@@ -225,7 +225,6 @@ order by sumSelfCost desc ;" id id)))) ;  limit 25
     nil))
 
 (defun make-dat-files-memory ()
-  ;(clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
     (let ((traces (clsql:query "SELECT id FROM tracestore; "))) ;  WHERE id = 9
       (mapc 
        (lambda (trace)
@@ -233,7 +232,13 @@ order by sumSelfCost desc ;" id id)))) ;  limit 25
 	 (let ((traceid (car trace)))
 	   (to-dat-file (get-info-files-memory traceid) (format nil "trace.~a.out" traceid)))) 
        traces)
-      nil));)
+      nil))
 
 (when nil
-  (make-dat-files-memory))
+  (handler-bind      
+    ((CLSQL-SYS:SQL-CONNECTION-ERROR 
+      #'(lambda (err)
+	  (declare (ignore err))
+	  (invoke-restart 'USE-OLD))))
+    (clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
+      (make-dat-files-memory))))
