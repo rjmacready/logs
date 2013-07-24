@@ -111,6 +111,21 @@ order by sumSelfCost desc ;"))) ;  limit 25
        #'condition-to-sql
        conditions)))
 
+(defun time-by-file (id)
+  (let ((rows (clsql:query (format nil "
+select sum(cost) c, filename 
+from profileinvstore 
+where cmdid=~a
+group by filename 
+order by c desc " id))))
+    (mapcar
+     (lambda (row)
+       (let ((cost (first row))
+	     (filename (second row)))
+	 `((:filename . ,filename)
+	   (:cost . ,cost))))
+     rows)))
+
 (defun files-spent-model (id &optional (conditions nil))  
   (declare (ignore conditions))
   (let ((rows (clsql:query (format nil "
@@ -190,23 +205,22 @@ order by sumSelfCost desc ;" id id)))) ;  limit 25
 	(:lineno . ,lineno)
 	(:parent . ,parent)))))
 
-(defun get-info-files-memory (id)
-  ;(clsql:with-database (clsql:*default-database* (list "/home/user/logs/logs.db") :database-type :sqlite3)
-    (let* ((rows (clsql:query
-		  (format nil "SELECT id, timeoffset, memory FROM tracelinestore WHERE traceid = ~a ;" id)))
-	   (lastmem (third (car rows))))
-      (mapcar
-       (lambda (row)
-	 (let ((id (first row))				
-	       (timeoffset (second row))
-	       (memory (third row)))
-	   (prog1
-	       `((:id . ,id)
-		 (:timeoffset . ,timeoffset)
-		 (:memory . ,memory)
-		 (:memorydelta . ,(- memory lastmem)))
-	     (setf lastmem memory))))
-       rows)));)
+(defun get-info-files-memory (id &optional (offset 0) (count 20000))
+  (let* ((rows (clsql:query
+		(format nil "SELECT id, timeoffset, memory FROM tracelinestore WHERE traceid = ~a order by timeoffset LIMIT ~a, ~a;" id offset count)))
+	 (lastmem (third (car rows))))
+    (mapcar
+     (lambda (row)
+       (let ((id (first row))				
+	     (timeoffset (second row))
+	     (memory (third row)))
+	 (prog1
+	     `((:id . ,id)
+	       (:timeoffset . ,timeoffset)
+	       (:memory . ,memory)
+	       (:memorydelta . ,(- memory lastmem)))
+	   (setf lastmem memory))))
+     rows)))
 
 (defun to-dat-file (output filename)
   (with-open-stream (*standard-output* (open filename :direction :output :if-exists :supersede))

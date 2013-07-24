@@ -12,6 +12,9 @@
   (write-string "hello world")
   (write-char #\Newline)
   (serve)
+; Block this thread
+  (write-string "Pressing any char will stop the server")
+  (write-char #\Newline)
   (read-char)
   (stop)
   (exit))

@@ -334,6 +334,14 @@
 			      "Open this coverage")))))
 	     rows)))))))))
 
+(defmacro defjson (name args &body body)
+  `(defun ,name ,args
+     (cl-json:encode-json-to-string (progn
+				      ,@body))))
+
+(defjson rest-time-by-file (id)
+  (time-by-file id))
+
 (defun rest-get-root (id)
   (cl-json:encode-json-to-string (get-root id)))
 
@@ -444,10 +452,12 @@
        (:script :src "js/jquery-2.0.2.min.js")
        (:script :src "js/flot/jquery.flot.js")
        (:script :src "js/flot/jquery.flot.stack.js")
+       (:script :src "js/flot/jquery.flot.pie.js")
        
        (:script (cl-who:str (parenscript:ps* `(defvar cmdid ,id))))
        (:script :src "profilecmd.js")
-       (:div (:a :id "timespentfunction" :href "#" "Time spent / function"))
+       (:div (:a :id "timespentfunction" :href "#" "Time spent / function") (:br)
+	     (:a :id "timespentfile" :href "#" "Time spent / file"))
       
       (:div :id "placeholder")
       (:div :id "info_selected")
@@ -915,6 +925,9 @@
   (hunchentoot:define-easy-handler (codecov :uri "/codecov")
       (id)
     (show-code-cov id))
+
+  (hunchentoot:define-easy-handler (handler-time-by-file :uri "/rest/profile/byfile") (id)
+    (rest-time-by-file id))
 
   (hunchentoot:define-easy-handler (trace-get-root :uri "/rest/trace/get-root") (id)
     (rest-get-root id))

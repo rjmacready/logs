@@ -4,6 +4,27 @@ open Common2;;
 open Ast_php;;
 module V = Visitor_php;;
 
+(* 
+   check 
+   parse_php.ml
+   ast_php.ml
+*)
+let str_of_toplevel t = match t with
+  | StmtList(_) -> pr2 "stmts"
+  | FuncDef(_) -> pr2 "funcdef"
+  | ClassDef(_) -> pr2 "classdef"
+  | ConstantDef(_) -> pr2 "constantdef"
+  | TypeDef(_) -> pr2 "typedef"
+  | NamespaceDef(_, _, _) -> pr2 "namespacedef"
+  | NamespaceBracketDef(_, _, _) -> pr2 "namespacebracketdef"
+  | NamespaceUse(_, _, _) -> pr2 "namespaceuse"
+  | NotParsedCorrectly(_) -> pr2 "not parsed correctly"
+  | FinalDef(_) -> pr2 "finaldef"
+  | _ -> failwith "unexpected toplevel";;
+
+let str_of_program p = 
+  List.iter str_of_toplevel p;;
+
 
 let str_of_info info =
   let file = Parse_info.file_of_info info in
@@ -68,3 +89,7 @@ Printf.printf "%s\n" file;;
 let files = Lib_parsing_php.find_php_files_of_dir_or_files ["/home/user/logs/test/"] in
 files +> List.iter (fun x -> pr2 (spf "%s" x));
 files +> List.iter (fun x -> walk_file x);
+files +> List.iter (fun x -> 
+  let ast = Parse_php.parse_program x in
+  str_of_program ast);
+

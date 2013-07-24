@@ -82,6 +82,48 @@ var plot = null;
 $(function() {
     var chartData;
 
+    var getDataTimeSpentFile = function(cb) {
+	$.ajax({
+	    type: 'GET',
+	    url : '/rest/profile/byfile',
+	    data: {
+		id: cmdid
+	    },
+	    dataType: "json",
+	    success: function(data) {
+		console.log(data);
+
+		var cdata = [];
+		data.forEach(function(item) {
+		    cdata.push({
+			label: item.filename,
+			data: item.cost
+		    });
+		});
+
+		var options = {
+		    series: {
+			pie: {
+			    show: true,
+			    label: {
+				show: false
+			    }
+			}
+		    },
+		    grid: {
+			hoverable: true,
+			clickable: true
+		    },
+		    legend: {
+			show: false
+		    }
+		};
+		
+		cb(cdata, options, data);
+	    }
+	});
+    };
+
     var getDataTimeSpentFunc = function(cb) {
 	$.ajax({
 	    type : 'GET',
@@ -165,6 +207,28 @@ $(function() {
 	    }
 	});
     };
+
+    $("#timespentfile").click(function() {
+	getDataTimeSpentFile(function (data, options, original) {
+	    plot = $.plot("#placeholder", data, options);	    
+
+
+	    $("#placeholder").bind("plothover", function(event, pos, item) {
+		if(!item) return;
+
+		//console.log(event, pos, item);
+		$('#info_selected').text(item.series.label);
+	    });
+
+	    $("#placeholder").bind("plotclick", function(event, pos, item) {
+		//console.log(event, pos, item);
+		if(!item) return;
+		
+		//var xcoord = item.datapoint[0];
+		$('#info_selected').text(item.series.label);
+	    });
+	});
+    });
 
     $("#timespentfunction").click(function() {
 	getDataTimeSpentFunc(function(data, options, original) {
