@@ -43,4 +43,5 @@
 (defun main() 
   (with-open-stream (*standard-output* 
 		     (open "out.txt" :direction :output :if-exists :supersede)) 
-    (read-to-db "/home/user/logs/profiles/cachegrind.out" "/home/user/logs/logs.db")))
+    ;(read-to-db "/home/user/logs/profiles/cachegrind.out" "/home/user/logs/logs.db")
+    (read-to-db "/home/user/logs/profiles/cachegrind__vtigercrm_print_external_php_quoteid=51027.out" "/home/user/logs/logs.db")))
