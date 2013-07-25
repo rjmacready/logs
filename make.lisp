@@ -19,5 +19,5 @@
   (stop)
   (exit))
 
-(let ((filename "main"))
+(let ((filename "main.out"))
   (save-lisp-and-die filename :toplevel #'main :executable t))

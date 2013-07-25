@@ -2,21 +2,26 @@
   (ql:quickload 'clsql-sqlite3))
 
 
-(trace-file-to-db 
- "/home/user/logs/traces/traceout.out.020f4f-1373058627-1373058627_341034.xt"
- "/home/user/logs/logs.db")
+;(trace-file-to-db 
+; "/home/user/logs/traces/traceout.out.020f4f-1373058627-1373058627_341034.xt"
+; "/home/user/logs/logs.db")
+
+;(trace-file-to-db 
+; "/home/user/logs/traces/traceout.out.00c9c0-1373217553-1373217553_717056.xt"
+; "/home/user/logs/logs.db")
+
+;(trace-file-to-db 
+; "/home/user/logs/traces/traceout.out.0d1e5e-1373217525-1373217525_187987.xt"
+; "/home/user/logs/logs.db")
+
+;(trace-file-to-db 
+; "/home/user/logs/traces/traceout.out.0e47d1-1373215785-1373215785_553672.xt"
+; "/home/user/logs/logs.db")
 
 (trace-file-to-db 
- "/home/user/logs/traces/traceout.out.00c9c0-1373217553-1373217553_717056.xt"
+ "/home/user/logs/traces/traceout__vtigercrm_print_external_php_quoteid=51027.out.xt"
  "/home/user/logs/logs.db")
 
-(trace-file-to-db 
- "/home/user/logs/traces/traceout.out.0d1e5e-1373217525-1373217525_187987.xt"
- "/home/user/logs/logs.db")
-
-(trace-file-to-db 
- "/home/user/logs/traces/traceout.out.0e47d1-1373215785-1373215785_553672.xt"
- "/home/user/logs/logs.db")
 
 ; :level :function-no :kind (:entry :entry-inc :exit) 
 ; :timeoffset :memory :function-name :deftype (:internal :user-defined)
