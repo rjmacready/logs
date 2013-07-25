@@ -6,7 +6,7 @@ module Ast = Ast_ml;;
 module Parse = Parse_ml;;
 module V = Visitor_ml;;
 
-let c = open_out "p.out";;
+let c = open_out "p.tmp";;
 let pr2 x = 
   output_string c (x^"\n");;
 
