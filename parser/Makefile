@@ -1,6 +1,6 @@
 
 .PHONY: all clean
-all: main.out parsefile.out pli.out parseml.out stmp.ml teststmp.out
+all: main.out parsefile.out pli.out parseml.out stmp.ml teststmp.out 
 
 SYSLIBS=/usr/lib/ocaml/unix.cma \
  /usr/lib/ocaml/str.cma \

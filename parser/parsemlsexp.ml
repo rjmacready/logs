@@ -148,23 +148,6 @@ let fun_str_of_param params =
 in
 
 let rec fun_str_of_ty ty =
-  let fun_str_of_longname longname =
-    match longname with
-      | (qualifiers, name) ->
-	String.concat "_"
-	  (List.concat [(List.map (function (n1, _) -> str_of_name n1) qualifiers);
-			[str_of_name name]])
-  in
-  let fun_str_of_tyargs args =
-    (match args with
-      | TyArg1 t -> fun_str_of_ty t;
-      | TyArgMulti tyls ->
-	let (_, tyls, _) = tyls in
-	let c = String.concat "_M_" 
-	  (List.concat 
-	     (List.map 
-		(function Left x -> [fun_str_of_ty x] | Right _ -> []) tyls)) in
-	spf "_A_%s_A_" c) in
   match ty with
   | TyName(longname) -> 
     fun_str_of_longname longname;
@@ -183,7 +166,27 @@ let rec fun_str_of_ty ty =
        (fun_str_of_tyargs args) 
        (fun_str_of_longname name);
   | _ -> failwith "other ty";
+and fun_str_of_longname longname =
+    match longname with
+      | (qualifiers, name) ->
+	String.concat "_"
+	  (List.concat [(List.map (function (n1, _) -> str_of_name n1) qualifiers);
+			[str_of_name name]])
+and fun_str_of_tyargs args =
+    (match args with
+      | TyArg1 t -> fun_str_of_ty t;
+      | TyArgMulti tyls ->
+	let (_, tyls, _) = tyls in
+	let c = String.concat "_M_" 
+	  (List.concat 
+	     (List.map 
+		(function Left x -> [fun_str_of_ty x] | Right _ -> []) tyls)) in
+	spf "_A_%s_A_" c);
+  
 in
+
+let alllists = ref [] in
+let alldefs = ref [] in
 
 let matcher_for_args ls =
   let i = ref (-1) in
@@ -212,19 +215,46 @@ in
 let k a = (fun _ -> a);
 in
 
+let with_output_string dummy = 
+  (let s = ref "" in
+  let pr2 x = 
+    s := !s^x;
+    (); in
+  let pr2n x = pr2 (x^"\n") in
+  dummy pr2 pr2n;
+  !s;) in
 
 let matcher_for_values ls _constrname =
   let i = ref (-1) in
   let rec this_matcher ls =
     (let rec f x = 
        (match x with
+	 | TyApp (args, (_, Name("list", _))) ->
+
+	   let stargs = fun_str_of_tyargs args
+	   in
+	   let name = spf "sexp_of_%s" (fun_str_of_ty x)
+	   in 
+	   alllists := add !alllists 
+	     name (stargs);
+	   
+	   (*
+	   alldefs := (with_output_string (fun pr2 pr2n ->
+	     print_string "hello!!!\n";
+	     pr2n (spf "%s x = \"%s\"; " name name))) :: !alldefs;
+	   *)
+
+	   i := !i + 1;
+	   spf "(%s t%d)" name !i;
+	   
 	  | TyName _ | TyApp _ ->
 	    i := !i + 1;
-	    spf "(sexp_of_%s t%d)" (fun_str_of_ty x) !i
+	    spf "(sexp_of_%s t%d)" (fun_str_of_ty x) !i;
 	  | TyTuple(ls) | TyTuple2(_, ls, _) ->
 	    let stringers = (List.rev (map_of_either_list ls f)) in
 	    let fmt = List.map (k "%s") stringers in
-	    spf "(spf \"%s\" %s)" (String.concat "," fmt) (String.concat " " stringers);
+	    spf "(spf \"%s\" %s)" (String.concat "," fmt) 
+	      (String.concat " " stringers);
 	  | _ -> failwith "matcher for args missing something";
        ) in
      let ls = List.rev (map_of_either_list ls f) in
@@ -253,31 +283,33 @@ in
 *)
 let sexp_of d = match d with
   | TyDef(params, name, _, TyAlgebric(opts)) ->
-    let typename = (str_of_name name) in
-    (* header of the function *)
-    pr2n (spf "let rec sexp_of_%s (x : Ast.%s) = " typename typename);
-    pr2n "\tmatch x with";
-    (* lets match against all constructors *)
-    sexp_of_either_list opts (fun (name, args) -> 
-      let constrname = str_of_name name in
-      match args with
-	| NoConstrArg -> 
-	  pr2n (spf "\t| %s -> \"%s\"; " constrname constrname); 
-	| Of(_, tyls) ->
-	  (* let lsts = map_of_either_list tyls sexp_of_ty in
-	  String.concat ", " lsts in *)
-	  let concated = matcher_for_args tyls in
-	  let concated2 = matcher_for_values tyls constrname in
-	  pr2n (spf "\t| %s %s -> spf \"%s %%s\" (%s);" 
-		  constrname concated 
-		  constrname concated2);
-    );  
-    pr2n ";;";
+    alldefs := (with_output_string (fun pr2 pr2n -> 
+      let typename = (str_of_name name) in
+      (* header of the function *)
+      pr2n (spf " sexp_of_%s (x : Ast.%s) = " typename typename);
+      pr2n "\tmatch x with";
+      (* lets match against all constructors *)
+      sexp_of_either_list opts (fun (name, args) -> 
+	let constrname = str_of_name name in
+	match args with
+	  | NoConstrArg -> 
+	    pr2n (spf "\t| %s -> \"%s\"; " constrname constrname); 
+	  | Of(_, tyls) ->
+	    (* let lsts = map_of_either_list tyls sexp_of_ty in
+	       String.concat ", " lsts in *)
+	    let concated = matcher_for_args tyls in
+	    let concated2 = matcher_for_values tyls constrname in
+	    pr2n (spf "\t| %s %s -> spf \"%s %%s\" (%s);" 
+		    constrname concated 
+		    constrname concated2);
+      );  
+      pr2n ";";)) :: !alldefs;
     ();
   | TyDef(TyNoParam, name, _, TyCore(ty)) ->
-    pr2n (spf "let sexp_of_%s _x = \"%s\";;" 
-	    (str_of_name name) 
-	    (fun_str_of_ty ty));
+
+    alldefs := (spf " sexp_of_%s _x = \"%s\";" 
+		  (str_of_name name) 
+		  (fun_str_of_ty ty)) :: !alldefs;
     ();
   | _ -> (); in
 
@@ -299,4 +331,29 @@ pr2n "open Stmpbase;;";
 pr2n "module Ast = Ast_php;;";
 pr2n "";
 let ast = Parse.parse_program "/home/user/pfff/lang_php/parsing/ast_php.ml" in
-visitor (Ast.Program ast);;
+visitor (Ast.Program ast);
+(*
+print_string (spf "%d\n" (List.length !alldefs));
+print_string "HI!\n";
+*)
+(* let alldefs = List.rev !alldefs in *)
+
+let alldefs = List.rev !alldefs in  
+let alldefs = List.append (List.map (fun (x, (c)) -> 
+  spf " %s x = (spf \"[%%s]\" (String.concat \", \" (List.map (fun x -> sexp_of_%s x) x))); " x c) !alllists) alldefs
+in
+pr2 "let rec ";
+pr2 (String.concat "\n\tand " alldefs);
+
+(*let alllists = List.rev !alllists in
+List.iter (fun (x, _) -> 
+  print_string (x^"\n");) alllists;
+*)
+
+
+(*
+List.iter (fun x ->
+  pr2n x;
+) (List.rev !alldefs);;
+
+*)
