@@ -1,6 +1,6 @@
 
-.PHONY: all clean testparseml
-all: main.out parsefile.out pli.out parseml.out testparseml
+.PHONY: all clean
+all: main.out parsefile.out pli.out parseml.out stmp.ml teststmp.out
 
 SYSLIBS=/usr/lib/ocaml/unix.cma \
  /usr/lib/ocaml/str.cma \
@@ -68,9 +68,17 @@ pli.out: pli.ml
 parseml.out: parseml.ml
 	ocamlc $(FLAGS) -o $@ -custom $(SYSLIBSPF) $(LIBSPF3) $(INCLUDESPF3) $^ -cclib -lunix -cclib -lpcre
 
-testparseml: parseml.out
+parsemlsexp.out: parsemlsexp.ml
+	ocamlc $(FLAGS) -o $@ -custom $(SYSLIBSPF) $(LIBSPF3) $(INCLUDESPF3) $^ -cclib -lunix -cclib -lpcre
+
+p.tmp: parseml.out
 	./parseml.out
 
+stmp.ml: parsemlsexp.out
+	./parsemlsexp.out
+
+teststmp.out: stmpbase.ml stmp.ml sexptmp.ml teststmp.ml
+	ocamlc $(FLAGS) -o $@ -custom $(SYSLIBSPF) $(LIBSPF) $(INCLUDESPF) $^ -cclib -lunix -cclib -lpcre
 
 clean: 
-	rm -f *.out *.tmp *.annot *.cmo *.cmi *.cmt
+	rm -f *.out *.tmp *.annot *.cmo *.cmi *.cmt stmp.ml

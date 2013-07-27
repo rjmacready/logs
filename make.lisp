@@ -9,6 +9,10 @@
   (cffi:define-foreign-library sqlite3
     (:unix "libsqlite3.so"))
 
+  (cffi:define-foreign-library clsql_uffi
+    (:unix "clsql_uffi.so"))
+
+
   (write-string "hello world")
   (write-char #\Newline)
   (serve)
