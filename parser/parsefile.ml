@@ -2,6 +2,7 @@
 open Common;;
 open Common2;;
 open Ast_php;;
+open Meta_ast_php;;
 module V = Visitor_php;;
 
 (* 
@@ -87,9 +88,25 @@ Printf.printf "%s\n" file;;
 
 
 let files = Lib_parsing_php.find_php_files_of_dir_or_files ["/home/user/logs/test/"] in
+(* 
 files +> List.iter (fun x -> pr2 (spf "%s" x));
-files +> List.iter (fun x -> walk_file x);
+files +> List.iter (fun x -> walk_file x); 
+*)
 files +> List.iter (fun x -> 
-  let ast = Parse_php.parse_program x in
-  str_of_program ast);
+  let ast = Parse_php.parse_program x in  
+(*   str_of_program ast  *)
+
+  pr2 (spf "%s\n" x);
+  
+  let vof = vof_program ast in
+(*  let jvof = Ocaml.json_of_v vof in
+  pr2 (Json_out.string_of_json jvof); *)
+
+(*  pr2 (Ocaml.string_of_v vof); *)
+
+  let sexp = (Ocaml.string_sexp_of_v vof) in
+  pr2 sexp;
+(* *)
+
+);
 

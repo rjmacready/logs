@@ -116,9 +116,9 @@ let str_of_type d =
     | TyDef(params, name, _, kind) -> 
       (match params with 
 	| TyNoParam -> 
-	  pr2 (spf "type %s = %s" (str_of_name name) (str_of_kind kind));
+	  spf "type %s = %s" (str_of_name name) (str_of_kind kind);
 	| TyParam1 _ ->
-	  pr2 (spf "type %s %s = %s" (str_of_param params) (str_of_name name) (str_of_kind kind));
+	  spf "type %s %s = %s" (str_of_param params) (str_of_name name) (str_of_kind kind);
 	| _ -> failwith "type with more than 1 param!";)
     | _ -> failwith "abstract!";;
 
@@ -185,9 +185,15 @@ and fun_str_of_tyargs args =
   
 in
 
+(* outputs to final file *)
 let alllists = ref [] in
 let alldefs = ref [] in
 
+(* definitions *)
+let alldefined = ref [] in
+let allnec = ref [] in
+
+(* ********************* *)
 let matcher_for_args ls =
   let i = ref (-1) in
   let rec this_matcher ls =
@@ -232,24 +238,20 @@ let matcher_for_values ls _constrname =
 	 | TyApp (args, (_, Name("list", _))) ->
 
 	   let stargs = fun_str_of_tyargs args
-	   in
-	   let name = spf "sexp_of_%s" (fun_str_of_ty x)
+	   and name = spf "sexp_of_%s" (fun_str_of_ty x)
 	   in 
 	   alllists := add !alllists 
 	     name (stargs);
-	   
-	   (*
-	   alldefs := (with_output_string (fun pr2 pr2n ->
-	     print_string "hello!!!\n";
-	     pr2n (spf "%s x = \"%s\"; " name name))) :: !alldefs;
-	   *)
 
 	   i := !i + 1;
 	   spf "(%s t%d)" name !i;
 	   
 	  | TyName _ | TyApp _ ->
 	    i := !i + 1;
-	    spf "(sexp_of_%s t%d)" (fun_str_of_ty x) !i;
+	    let typefuncname = spf "sexp_of_%s" (fun_str_of_ty x) in
+(*	    allnec := typefuncname :: !allnec; *)
+	    allnec := add !allnec typefuncname (x);
+	    spf "(%s t%d)" typefuncname !i;
 	  | TyTuple(ls) | TyTuple2(_, ls, _) ->
 	    let stringers = (List.rev (map_of_either_list ls f)) in
 	    let fmt = List.map (k "%s") stringers in
@@ -268,25 +270,38 @@ let matcher_for_values ls _constrname =
   in
   this_matcher ls;
 in
-(*
-let matcher_for_values ls =
-  let i = ref (-1) in
-  let f = (fun x ->
-    i := !i + 1;    
-    spf "(sexp_of_%s t%d)" (fun_str_of_ty x) !i
-  ) in
-  let ls = List.rev (map_of_either_list ls f) in
-  let fmt = spf "(%s)" (String.concat "," (List.map (k "%s") ls)) in
-  spf "spf \"%s\" %s" fmt (String.concat " " ls);
-  
-in
-*)
+
 let sexp_of d = match d with
+  | TyDef(params, name, _, TyRecord (_, fields, _)) ->
+    let typename = str_of_name name in
+    let typefuncname = spf "sexp_of_%s" typename in
+
+    alldefined := typefuncname :: !alldefined;
+    alldefs := (with_output_string (fun pr2 pr2n -> 
+      pr2 (spf " %s x = spf \"(:class %s :fields (" typefuncname typename);
+      let f = ref [] in
+      sexp_of_either_list fields (fun x ->
+	f := (str_of_name x.fld_name, x.fld_type) :: !f;
+      );
+      let fmt = String.concat " " (List.map (k "%s") !f) in
+      let args = List.fold_left (fun t (fldname, fldtype) ->
+	let typefuncname = spf "sexp_of_%s" (fun_str_of_ty fldtype) in
+	allnec := add !allnec typefuncname (fldtype);
+	t^(spf " (%s x.%s)" typefuncname fldname)
+      ) "" !f in 
+      pr2 fmt;
+      pr2 "))\"";
+      pr2 args;
+      pr2n ";";
+    )) :: !alldefs;
+    ();
   | TyDef(params, name, _, TyAlgebric(opts)) ->
     alldefs := (with_output_string (fun pr2 pr2n -> 
-      let typename = (str_of_name name) in
+      let typename = str_of_name name in
+      let typefunname = spf "sexp_of_%s" typename in
+      alldefined := typefunname :: !alldefined;
       (* header of the function *)
-      pr2n (spf " sexp_of_%s (x : Ast.%s) = " typename typename);
+      pr2n (spf " %s (x : Ast.%s) = " typefunname typename);
       pr2n "\tmatch x with";
       (* lets match against all constructors *)
       sexp_of_either_list opts (fun (name, args) -> 
@@ -306,12 +321,20 @@ let sexp_of d = match d with
       pr2n ";";)) :: !alldefs;
     ();
   | TyDef(TyNoParam, name, _, TyCore(ty)) ->
-
-    alldefs := (spf " sexp_of_%s _x = \"%s\";" 
-		  (str_of_name name) 
+    let typefunname = spf "sexp_of_%s" (str_of_name name) in
+    alldefined := typefunname :: !alldefined;
+    alldefs := (spf " %s _x = \"%s\";" 
+		  typefunname
 		  (fun_str_of_ty ty)) :: !alldefs;
     ();
-  | _ -> (); in
+  | TyDef(TyParam1(_), _, _, _) | TyDef(TyParamMulti(_), _, _, _)->
+    (* we dont care about generics, because as there's no
+       polymorphism or overloads, they wont be of much use to
+       us anyway. we will build formatters as needed *)
+    ();
+  | _ -> 
+    failwith (str_of_type d);
+in
 
 (* ******************************** *)
 
@@ -332,28 +355,45 @@ pr2n "module Ast = Ast_php;;";
 pr2n "";
 let ast = Parse.parse_program "/home/user/pfff/lang_php/parsing/ast_php.ml" in
 visitor (Ast.Program ast);
-(*
-print_string (spf "%d\n" (List.length !alldefs));
-print_string "HI!\n";
-*)
-(* let alldefs = List.rev !alldefs in *)
+
+
+let str_of_fun_list value =
+  match value with
+    | (typefuncname, (ty)) ->
+      spf " %s x = (spf \"[%%s]\" (String.concat \", \" (List.map (fun x -> sexp_of_%s x) x))); " typefuncname ty; 
+    | _  -> failwith "FAIL";
+in
 
 let alldefs = List.rev !alldefs in  
-let alldefs = List.append (List.map (fun (x, (c)) -> 
-  spf " %s x = (spf \"[%%s]\" (String.concat \", \" (List.map (fun x -> sexp_of_%s x) x))); " x c) !alllists) alldefs
+let alldefs = List.append (List.map str_of_fun_list !alllists) alldefs in
+let alldefined = ref (List.append (List.map (fun (x, _) -> x) !alllists) !alldefined) in
+
+(* filter referenced definitions *)
+let drallnec = !allnec in
+let drallnec = List.filter (fun (x, _) -> 
+  not (List.exists (fun k -> k = x) !alldefined)
+) drallnec in
+
+(* add referenced definitions *)
+
+let alldefsnec = ref [] in
+let rec fun_to_alldefsnec item = 
+  match item with
+    | (typefuncname, (ty)) ->
+      (match ty with
+	| _ ->	  
+	  alldefsnec := (with_output_string (fun pr2 pr2n ->
+            pr2n (spf " %s x = \"(:nec %s)\"; " typefuncname (str_of_ty ty));	    
+	  )) :: !alldefsnec;	  
+	  ();
+      );
+    | _ -> failwith "unexpected arg";
 in
+List.iter fun_to_alldefsnec drallnec;
+let alldefs = List.append !alldefsnec alldefs
+in
+
+(* output all definitions to file *)
+
 pr2 "let rec ";
 pr2 (String.concat "\n\tand " alldefs);
-
-(*let alllists = List.rev !alllists in
-List.iter (fun (x, _) -> 
-  print_string (x^"\n");) alllists;
-*)
-
-
-(*
-List.iter (fun x ->
-  pr2n x;
-) (List.rev !alldefs);;
-
-*)

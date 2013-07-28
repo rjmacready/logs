@@ -7,7 +7,133 @@ open Ast_php;;
 open Stmpbase;;
 module Ast = Ast_php;;
 
-let rec  sexp_of_modifier_list x = (spf "[%s]" (String.concat ", " (List.map (fun x -> sexp_of_modifier x) x))); 
+let rec  sexp_of_string_wrap x = "(:nec string wrap)"; 
+
+	and  sexp_of_xhp_tag_wrap x = "(:nec xhp_tag wrap)"; 
+
+	and  sexp_of_type_args_option x = "(:nec type_args option)"; 
+
+	and  sexp_of_hint_type_comma_list_paren x = "(:nec hint_type comma_list paren)"; 
+
+	and  sexp_of__A_tok_T__P_hint_type_comma_list_dots_paren_P__T__A_tok_T_hint_type_A__option_A__paren x = "(:nec (tok * (hint_type comma_list_dots paren) * (tok * hint_type) option) paren)"; 
+
+	and  sexp_of_Scope_php_phpscope_ref x = "(:nec Scope_php.phpscope ref)"; 
+
+	and  sexp_of_argument_comma_list_paren x = "(:nec argument comma_list paren)"; 
+
+	and  sexp_of_expr_option_bracket x = "(:nec expr option bracket)"; 
+
+	and  sexp_of_expr_brace x = "(:nec expr brace)"; 
+
+	and  sexp_of_binaryOp_wrap x = "(:nec binaryOp wrap)"; 
+
+	and  sexp_of_unaryOp_wrap x = "(:nec unaryOp wrap)"; 
+
+	and  sexp_of_assignOp_wrap x = "(:nec assignOp wrap)"; 
+
+	and  sexp_of_fixOp_wrap x = "(:nec fixOp wrap)"; 
+
+	and  sexp_of_expr_option x = "(:nec expr option)"; 
+
+	and  sexp_of_list_assign_comma_list_paren x = "(:nec list_assign comma_list paren)"; 
+
+	and  sexp_of_array_pair_comma_list_paren x = "(:nec array_pair comma_list paren)"; 
+
+	and  sexp_of_array_pair_comma_list_bracket x = "(:nec array_pair comma_list bracket)"; 
+
+	and  sexp_of_array_pair_comma_list_brace x = "(:nec array_pair comma_list brace)"; 
+
+	and  sexp_of_argument_comma_list_paren_option x = "(:nec argument comma_list paren option)"; 
+
+	and  sexp_of_castOp_wrap x = "(:nec castOp wrap)"; 
+
+	and  sexp_of_expr_paren x = "(:nec expr paren)"; 
+
+	and  sexp_of__A_expr_option_paren_A__option x = "(:nec (expr option paren) option)"; 
+
+	and  sexp_of_lvalue_paren x = "(:nec lvalue paren)"; 
+
+	and  sexp_of_lvalue_comma_list_paren x = "(:nec lvalue comma_list paren)"; 
+
+	and  sexp_of_cpp_directive_wrap x = "(:nec cpp_directive wrap)"; 
+
+	and  sexp_of_xhp_tag_option_wrap x = "(:nec xhp_tag option wrap)"; 
+
+	and  sexp_of_stmt_and_def_list_brace x = "(:nec stmt_and_def list brace)"; 
+
+	and  sexp_of_if_else_option x = "(:nec if_else option)"; 
+
+	and  sexp_of_new_else_option x = "(:nec new_else option)"; 
+
+	and  sexp_of_foreach_arrow_option x = "(:nec foreach_arrow option)"; 
+
+	and  sexp_of_expr_comma_list x = "(:nec expr comma_list)"; 
+
+	and  sexp_of_global_var_comma_list x = "(:nec global_var comma_list)"; 
+
+	and  sexp_of_static_var_comma_list x = "(:nec static_var comma_list)"; 
+
+	and  sexp_of_declare_comma_list_paren x = "(:nec declare comma_list paren)"; 
+
+	and  sexp_of__A_tok_T_expr_A__option x = "(:nec (tok * expr) option)"; 
+
+	and  sexp_of_tok_option x = "(:nec tok option)"; 
+
+	and  sexp_of_string_wrap_paren x = "(:nec string wrap paren)"; 
+
+	and  sexp_of__A_tok_T_hint_type_A__option x = "(:nec (tok * hint_type) option)"; 
+
+	and  sexp_of_parameter_comma_list_dots_paren x = "(:nec parameter comma_list_dots paren)"; 
+
+	and  sexp_of_type_params_option x = "(:nec type_params option)"; 
+
+	and  sexp_of_attributes_option x = "(:nec attributes option)"; 
+
+	and  sexp_of_static_scalar_affect_option x = "(:nec static_scalar_affect option)"; 
+
+	and  sexp_of_hint_type_option x = "(:nec hint_type option)"; 
+
+	and  sexp_of_modifier_wrap_option x = "(:nec modifier wrap option)"; 
+
+	and  sexp_of_tok_T_tok_T_tok x = "(:nec tok * tok * tok)"; 
+
+	and  sexp_of_class_stmt_list_brace x = "(:nec class_stmt list brace)"; 
+
+	and  sexp_of_interface_option x = "(:nec interface option)"; 
+
+	and  sexp_of_extend_option x = "(:nec extend option)"; 
+
+	and  sexp_of_class_constant_comma_list x = "(:nec class_constant comma_list)"; 
+
+	and  sexp_of_class_variable_comma_list x = "(:nec class_variable comma_list)"; 
+
+	and  sexp_of_class_name_comma_list x = "(:nec class_name comma_list)"; 
+
+	and  sexp_of__A_tok_M_trait_rule_list_brace_A__Common_either x = "(:nec (tok, trait_rule list brace) Common.either)"; 
+
+	and  sexp_of_xhp_attribute_decl_comma_list x = "(:nec xhp_attribute_decl comma_list)"; 
+
+	and  sexp_of_xhp_category_decl_comma_list x = "(:nec xhp_category_decl comma_list)"; 
+
+	and  sexp_of_xhp_value_affect_option x = "(:nec xhp_value_affect option)"; 
+
+	and  sexp_of_constant_comma_list_brace x = "(:nec constant comma_list brace)"; 
+
+	and  sexp_of_xhp_children_decl_paren x = "(:nec xhp_children_decl paren)"; 
+
+	and  sexp_of__A_ident_M_name_T_tok_T_ident_A__Common_either x = "(:nec (ident, name * tok * ident) Common.either)"; 
+
+	and  sexp_of_ident_option x = "(:nec ident option)"; 
+
+	and  sexp_of_static_scalar_comma_list_paren x = "(:nec static_scalar comma_list paren)"; 
+
+	and  sexp_of_qualified_ident_option x = "(:nec qualified_ident option)"; 
+
+	and  sexp_of_toplevel_list_brace x = "(:nec toplevel list brace)"; 
+
+	and  sexp_of_argument_comma_list x = "(:nec argument comma_list)"; 
+
+	and  sexp_of_modifier_list x = (spf "[%s]" (String.concat ", " (List.map (fun x -> sexp_of_modifier x) x))); 
 	and  sexp_of_tok_list x = (spf "[%s]" (String.concat ", " (List.map (fun x -> sexp_of_tok x) x))); 
 	and  sexp_of_stmt_list x = (spf "[%s]" (String.concat ", " (List.map (fun x -> sexp_of_stmt x) x))); 
 	and  sexp_of_modifier_wrap_list x = (spf "[%s]" (String.concat ", " (List.map (fun x -> sexp_of_modifier_wrap x) x))); 
@@ -348,6 +474,8 @@ let rec  sexp_of_modifier_list x = (spf "[%s]" (String.concat ", " (List.map (fu
 
 	and  sexp_of_new_elseif _x = "tok_T_expr_paren_T_tok_T_stmt_and_def_list";
 	and  sexp_of_new_else _x = "tok_T_tok_T_stmt_and_def_list";
+	and  sexp_of_func_def x = spf "(:class func_def :fields (%s %s %s %s %s %s %s %s %s %s))" (sexp_of_stmt_and_def_list_brace x.f_body) (sexp_of__A_tok_T_hint_type_A__option x.f_return_type) (sexp_of_parameter_comma_list_dots_paren x.f_params) (sexp_of_type_params_option x.f_tparams) (sexp_of_ident x.f_name) (sexp_of_is_ref x.f_ref) (sexp_of_modifier_wrap_list x.f_modifiers) (sexp_of_function_type x.f_type) (sexp_of_tok x.f_tok) (sexp_of_attributes_option x.f_attrs);
+
 	and  sexp_of_function_type (x : Ast.function_type) = 
 	match x with
 	| FunctionRegular -> "FunctionRegular"; 
@@ -356,6 +484,8 @@ let rec  sexp_of_modifier_list x = (spf "[%s]" (String.concat ", " (List.map (fu
 	| MethodAbstract -> "MethodAbstract"; 
 ;
 
+	and  sexp_of_parameter x = spf "(:class parameter :fields (%s %s %s %s %s %s))" (sexp_of_static_scalar_affect_option x.p_default) (sexp_of_dname x.p_name) (sexp_of_is_ref x.p_ref) (sexp_of_hint_type_option x.p_type) (sexp_of_modifier_wrap_option x.p_modifier) (sexp_of_attributes_option x.p_attrs);
+
 	and  sexp_of_is_ref _x = "tok_option";
 	and  sexp_of_lambda_def _x = "_P_lexical_vars_option_T_func_def_P_";
 	and  sexp_of_lexical_vars _x = "tok_T_lexical_var_comma_list_paren";
@@ -363,6 +493,10 @@ let rec  sexp_of_modifier_list x = (spf "[%s]" (String.concat ", " (List.map (fu
 	match x with
 	| LexicalVar (t0, t1) -> spf "LexicalVar %s" ((spf "%s, %s" (sexp_of_is_ref t0) (sexp_of_dname t1)));
 ;
+
+	and  sexp_of_constant_def x = spf "(:class constant_def :fields (%s %s %s %s))" (sexp_of_static_scalar x.cst_val) (sexp_of_hint_type_option x.cst_type) (sexp_of_ident x.cst_name) (sexp_of_tok_T_tok_T_tok x.cst_toks);
+
+	and  sexp_of_class_def x = spf "(:class class_def :fields (%s %s %s %s %s %s %s))" (sexp_of_class_stmt_list_brace x.c_body) (sexp_of_interface_option x.c_implements) (sexp_of_extend_option x.c_extends) (sexp_of_type_params_option x.c_tparams) (sexp_of_ident x.c_name) (sexp_of_class_type x.c_type) (sexp_of_attributes_option x.c_attrs);
 
 	and  sexp_of_class_type (x : Ast.class_type) = 
 	match x with
@@ -445,6 +579,8 @@ let rec  sexp_of_modifier_list x = (spf "[%s]" (String.concat ", " (List.map (fu
 	| InsteadOf (t0, t1, t2, t3, t4, t5) -> spf "InsteadOf %s" ((spf "%s, %s, %s, %s, %s, %s" (sexp_of_name t0) (sexp_of_tok t1) (sexp_of_ident t2) (sexp_of_tok t3) (sexp_of_class_name_comma_list t4) (sexp_of_tok t5)));
 	| As (t0, t1, t2, t3, t4) -> spf "As %s" ((spf "%s, %s, %s, %s, %s" (sexp_of__A_ident_M_name_T_tok_T_ident_A__Common_either t0) (sexp_of_tok t1) (sexp_of_modifier_wrap_list t2) (sexp_of_ident_option t3) (sexp_of_tok t4)));
 ;
+
+	and  sexp_of_type_def x = spf "(:class type_def :fields (%s %s %s %s %s %s))" (sexp_of_tok x.t_sc) (sexp_of_type_def_kind x.t_kind) (sexp_of_tok x.t_tokeq) (sexp_of_type_params_option x.t_tparams) (sexp_of_ident x.t_name) (sexp_of_tok x.t_tok);
 
 	and  sexp_of_type_def_kind (x : Ast.type_def_kind) = 
 	match x with

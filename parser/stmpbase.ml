@@ -4,153 +4,59 @@ open Common2;;
 open Ast_php;;
 module Ast = Ast_php;;
 
+let dummy x = "...";;
 
-let sexp_of_string_wrap (x : string wrap) =
-  "string wrap";;
-
-let sexp_of_xhp_tag_wrap (x: xhp_tag wrap) =
-  "xhp_tag wrap";;
-
-let sexp_of_tok (x : tok) = 
-  "tok";;
-
-let sexp_of_qualified_ident (x: qualified_ident) =
-  "qualified_ident";;
-
-let sexp_of_type_args_option (x : type_args option) =
-  "type_args option";;
-
-let sexp_of_hint_type_comma_list_paren (x: hint_type comma_list paren) =
-  "hint_type comma_list paren";;
+let sexp_of_string_wrap = dummy;;
+let sexp_of_xhp_tag_wrap = dummy;;
+let sexp_of_tok = dummy;;
+let sexp_of_qualified_ident = dummy;;
+let sexp_of_type_args_option = dummy;;
+let sexp_of_hint_type_comma_list_paren = dummy;;
 
 let sexp_of__A_tok_T__P_hint_type_comma_list_dots_paren_P__T__A_tok_T_hint_type_A__option_A__paren x = 
   "very long anonymous type";;
 
-let sexp_of_class_name x =
-  "class name";;
-
-let sexp_of_Scope_php_phpscope_ref x =
-  "scope php";;
-
-let sexp_of_argument_comma_list_paren x =
-  "...";;
-
-let sexp_of_class_name_reference x =
-  "...";;
-
-let sexp_of_expr_option_bracket x =
-  "...";;
-
-let sexp_of_expr_brace x =
-  "...";;
-
-let sexp_of_expr_paren x =
-  "...";;
-
-let sexp_of_scalar x =
-  "...";;
-
-let sexp_of_binaryOp_wrap x =
-  "...";;
-
-let sexp_of_unaryOp_wrap x =
-  "...";;
-
-let sexp_of_lvalue x =
-  "...";;
-
-let sexp_of_assignOp_wrap x =
-  "...";;
-
-let sexp_of_rw_variable x =
-  "...";;
-
-let sexp_of_fixOp_wrap x =
-  "...";;
-
-let sexp_of_expr_option x =
-  "...";;
-
-let sexp_of_list_assign_comma_list_paren x =
-  "...";;
-
-let sexp_of_array_pair_comma_list_paren x =
-  "...";;
-
-let sexp_of_array_pair_comma_list_bracket x =
-  "...";;
-
-let sexp_of_array_pair_comma_list_brace x =
-  "...";;
-
-let sexp_of_argument_comma_list_paren_option x =
-  "...";;
-
-let sexp_of_castOp_wrap x =
-  "...";;
-
-let sexp_of_lambda_def x =
-  "...";;
-
-let sexp_of__A_expr_option_paren_A__option x =
-  "...";;
-
-let sexp_of_encaps_list x =
-  "...";;
-
-let sexp_of_lvalue_paren x =
-  "...";;
-
-let sexp_of_lvalue_comma_list_paren x =
-  "...";;
-
-let sexp_of_xhp_html x =
-  "...";;
-
-let sexp_of_constant x =
-  "...";;
-
-let sexp_of_cpp_directive_wrap x =
-  "...";;
-
-let sexp_of_class_stmt_list x =
-  "...";;
-
-let sexp_of_arithOp x =
-  "...";;
-
-let sexp_of_logicalOp x =
-  "...";;
-
-let sexp_of_xhp_attribute_list x =
-  "...";;
-
-let sexp_of_xhp_body_list x =
-  "...";;
-
-let sexp_of_xhp_tag_option_wrap x =
-  "...";;
-
-let sexp_of_w_variable x =
-  "...";;
-
-let sexp_of_stmt_and_def_list_brace x =
-  "...";;
-
-let sexp_of_if_elseif_list x =
-  "...";;
-
-let sexp_of_if_else_option x =
-  "...";;
-
-let sexp_of_stmt_and_def_list x =
-  "...";;
-
-let sexp_of_new_elseif_list x =
-  "...";;
-
-let dummy x = "...";;
-
+let sexp_of_class_name = dummy;;
+let sexp_of_Scope_php_phpscope_ref = dummy;;
+let sexp_of_argument_comma_list_paren = dummy;;
+let sexp_of_class_name_reference = dummy;;
+let sexp_of_expr_option_bracket = dummy;;
+let sexp_of_expr_brace = dummy;;
+let sexp_of_expr_paren = dummy;;
+let sexp_of_scalar = dummy;;
+let sexp_of_binaryOp_wrap = dummy;;
+let sexp_of_unaryOp_wrap = dummy;;
+let sexp_of_lvalue = dummy;;
+let sexp_of_assignOp_wrap = dummy;;
+let sexp_of_rw_variable = dummy;;
+let sexp_of_fixOp_wrap = dummy;;
+let sexp_of_expr_option = dummy;;
+let sexp_of_list_assign_comma_list_paren = dummy;;
+let sexp_of_array_pair_comma_list_paren = dummy;;
+let sexp_of_array_pair_comma_list_bracket = dummy;;
+let sexp_of_array_pair_comma_list_brace = dummy;;
+let sexp_of_argument_comma_list_paren_option = dummy;;
+let sexp_of_castOp_wrap = dummy;;
+let sexp_of_lambda_def = dummy;;
+let sexp_of__A_expr_option_paren_A__option = dummy;;
+let sexp_of_encaps_list = dummy;;
+let sexp_of_lvalue_paren = dummy;;
+let sexp_of_lvalue_comma_list_paren = dummy;;
+let sexp_of_xhp_html = dummy;;
+let sexp_of_constant = dummy;;
+let sexp_of_cpp_directive_wrap = dummy;;
+let sexp_of_class_stmt_list = dummy;;
+let sexp_of_arithOp = dummy;;
+let sexp_of_logicalOp = dummy;;
+let sexp_of_xhp_attribute_list = dummy;;
+let sexp_of_xhp_body_list = dummy;;
+let sexp_of_xhp_tag_option_wrap = dummy;;
+let sexp_of_w_variable = dummy;;
+let sexp_of_stmt_and_def_list_brace = dummy;;
+let sexp_of_if_elseif_list = dummy;;
+let sexp_of_if_else_option = dummy;;
+let sexp_of_stmt_and_def_list = dummy;;
+let sexp_of_new_elseif_list = dummy;;
 let sexp_of_new_else_option = dummy;;
 let sexp_of_colon_stmt = dummy;;
 let sexp_of_for_expr = dummy;;
@@ -198,5 +104,14 @@ let sexp_of_modifier = dummy;;
 let sexp_of_argument_comma_list = dummy;;
 let sexp_of_parameter = dummy;;
 let sexp_of_parameter_comma_list_dots_paren = dummy;;
+let sexp_of__A_tok_T_hint_type_A__option = dummy;;
+let sexp_of_type_params_option = dummy;;
+let sexp_of_attributes_option = dummy;;
+let sexp_of_static_scalar_affect_option = dummy;;
+let sexp_of_modifier_wrap_option = dummy;;
+let sexp_of_tok_T_tok_T_tok = dummy;;
+let sexp_of_class_stmt_list_brace = dummy;;
+let sexp_of_interface_option = dummy;;
+let sexp_of_extend_option = dummy;;
 
 (**)
