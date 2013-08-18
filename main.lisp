@@ -862,10 +862,7 @@
   (setf *thread* (make-instance 'hunchentoot:easy-acceptor :port 8001 :document-root "~/logs/www/"))
 
   (hunchentoot:define-easy-handler (configprofilesave :uri "/configprofilesave") (realdata)
-    ;(print (hunchentoot:raw-post-data))
-    ;(print "hey")
     (save-configprofile realdata)
-    ;(print "ok")
     (hunchentoot:redirect "/")
     )
 
