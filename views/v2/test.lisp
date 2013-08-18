@@ -7,10 +7,10 @@
 			 (:title)) 
 			(:body 
 			 (:h1 "test")
-			 (:div :id "header")
-			 (:div :id "container")
-			 (:div)
-			 (:div :id "footer")))))
+			 (:div :id "header" :class "header se" )
+			 (:div :id "container" :class "se ve ral")
+			 (:div :class "ve")
+			 (:div :id "footer" :class "se")))))
 
 ; lets walk the htmlnode tree, print ourselves some tags
 (walk (lambda (node)
@@ -44,3 +44,9 @@
 
 ; dump tree
 (towho *tree*)
+
+(setf *res* (select *lq* (make-instance 'selector-class
+					:class "se")))
+
+(setf *res* (select *lq* (make-instance 'selector-class
+					:class '("se" "ve"))))
