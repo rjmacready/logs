@@ -50,3 +50,12 @@
 
 (setf *res* (select *lq* (make-instance 'selector-class
 					:class '("se" "ve"))))
+
+(setf *res* 
+      (select *lq* 
+	      (make-instance 'selector-combination 
+			     :selectors (list
+					 (make-instance 'selector-tagname
+							:tagname :div)
+					 (make-instance 'selector-class
+							:class '("se" "ve"))))))

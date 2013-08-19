@@ -20,7 +20,7 @@
 
 
 (defmethod emap ((f function) (i iterable-null))
-  ; continue frosty. return as-is.
+  ; continue frosty. return as-is, do nothing.
   i)
 (defmethod emap ((f function) (i iterable-single))
   (wrap-iterable (funcall f (slot-value i 'elem))))
@@ -29,9 +29,39 @@
 
 ; ------------------
 
-; TODO we need a selector factory
-; TODO we need a transparent way of combinating selectors
+; TODO we need a selector factory!
+; TODO we need a transparent way of combinating selectors!
+; TODO slots should be read-only! setable only at constructor-time!
 (defclass selector () ())
+
+; ------------------
+
+; works like an (AND selector-1 ... selector-n)
+(defclass selector-combination (selector)
+  ((selectors :initarg :selectors)))
+
+; TODO we need to enforce:
+; * selectors should be a list
+; * selectors should have at least one element
+; * each element should be a subtype of selector
+
+(defmethod compileselector ((s selector-combination))
+  (with-slots (selectors) s
+    (if (= 1 (length selectors))
+	(compileselector (car selectors))
+	; assume we dont have an empty list!
+	; condition should be caught at construtor!
+	(let ((compiled (mapcar #'compileselector selectors)))
+	  (lambda (node)
+	    (not 
+	     ; (1) by default loop returns nil, and for now
+	     ; I can't seem to find a way to work around this.
+	     ; so we'll use T to signal a condition fail, then
+	     ; we'll "not" the value
+	     (loop 
+		for x in compiled
+		for y = (funcall x node)
+		when (not y) return T)))))))
 
 ; ------------------
 
@@ -55,12 +85,15 @@
 	      (string (if (position-if (lambda (n) (equal n class)) class-value)
 			  T
 			  nil))
-	      (list (if (position-if (lambda (n) 				       
-				       (position-if 
-					(lambda (n1)
-					  (equal n1 n)) class)) class-value)
-			T
-			nil)))))))))
+              ; ALL classes should be matched!
+	      (list
+	       ; check comment signaled with (1)
+	       (not 
+		(loop 
+		   for class in class
+		   ; look for it ...
+		   unless (position-if (lambda (n) (equal n class)) class-value)
+		   return T))))))))))
 
 ; ------------------
 
