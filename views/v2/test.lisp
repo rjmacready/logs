@@ -65,9 +65,6 @@
 
 ;(html-parse)
 
-(defmacro compose (f g)
-  `(lambda (n) (,f (,g n))))
-
 (with-open-stream (v (open "/home/user/logs/views/v2/index.html"))
   (let ((htmltree (html-parse:parse-html v)))
     ; TODO check doctype, it might be the head, it might not. :|
@@ -131,3 +128,53 @@
 ; test conversions...
 ; convert file -> tree -> cl-who -> file
 ; redo and match. basically, see if html-parse <=> cl-who is simmetrical / inversable
+
+
+; playing around ...
+
+(defmacro compose (f g)
+  `(lambda (n) (,f (,g n))))
+
+
+(set-macro-character #\!
+		     (lambda (stream _)
+		       (let ((arg-no (read stream)))
+			     (unless (numberp arg-no)
+			       (error "expected a number!"))
+			     `(*L-Args-get-argument* ,arg-no))) )
+
+(defmacro -\ (&body sexp)
+  `(lambda (&rest *L-Args-Name*)
+     (labels ((*L-Args-get-argument* (arg-no) (nth arg-no *L-Args-Name*)))
+       ,@sexp)))
+
+(-\ (print "hi"))
+(-\ (print !0))
+
+(funcall (,\ (print !0)) "hello world")
+
+
+(defmacro curry (function no-args)
+  (when (< no-args 1)
+    (error "hasta la vista funny guy"))
+  
+  (let ((args (loop for x from 1 to no-args
+		 collect (gensym)))) 
+    
+    (labels ((rec-curry (narg larg)
+	       (if (= narg 1)
+		   `(lambda (,(car larg))
+		      (funcall ,function
+			       ,@args))
+		   `(lambda (,(car larg))
+		      ,(rec-curry (- narg 1) (cdr larg)))))))
+    
+    (rec-curry no-args args))))
+
+; TODO ...
+(defmacro defcurried (name (&rest args-list) &body body)
+  `(defun ,name (,@args-list)
+     nil))
+
+(defcurried print-3 (a b c)
+  (print a b c))
