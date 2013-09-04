@@ -133,7 +133,8 @@
 ; playing around ...
 
 (defmacro compose (f g)
-  `(lambda (n) (,f (,g n))))
+  (let ((n (gensym)))
+    `(lambda (,n) (,f (,g ,n)))))
 
 
 (set-macro-character #\!
@@ -143,24 +144,41 @@
 			       (error "expected a number!"))
 			     `(*L-Args-get-argument* ,arg-no))) )
 
-(defmacro -\ (&body sexp)
+(defmacro L (&body sexp)
   `(lambda (&rest *L-Args-Name*)
      (labels ((*L-Args-get-argument* (arg-no) (nth arg-no *L-Args-Name*)))
        ,@sexp)))
 
-(-\ (print "hi"))
-(-\ (print !0))
+(L (print "hi"))
+(L (print !0))
 
-(funcall (,\ (print !0)) "hello world")
+(funcall (L (print !0)) "hello world")
 
+
+; declarations à là scheme
+(defmacro define (stuff &body value)
+  (when (null stuff)
+    (error "are you trying to be fun?"))
+  (if (listp stuff)
+      `(defun ,(car stuff) (,@(cdr stuff))
+	 ,@value)
+      `(defparameter ,stuff ,@value)))
+
+(define x 1)
+(define y (list 1 2 3))
+(define (hello a)
+    (print 'hello)
+    (print a))
+
+(hello 'world)
+
+; *****
 
 (defmacro curry (function no-args)
   (when (< no-args 1)
-    (error "hasta la vista funny guy"))
-  
+    (error "hasta la vista, funny guy")) 
   (let ((args (loop for x from 1 to no-args
 		 collect (gensym)))) 
-    
     (labels ((rec-curry (narg larg)
 	       (if (= narg 1)
 		   `(lambda (,(car larg))
@@ -178,3 +196,15 @@
 
 (defcurried print-3 (a b c)
   (print a b c))
+
+(defun read-file-to-string (pathname)
+  (with-output-to-string (out)
+    (with-open-file (in pathname)
+      (handler-bind ((SB-INT:STREAM-DECODING-ERROR 
+		      #'(lambda(err) 
+			  (declare (ignore err)) 
+			  (invoke-restart 'sb-int:attempt-resync))))
+	(loop with buffer = (make-array 8192 :element-type 'character)
+	   for n-characters = (read-sequence buffer in)
+	   while (< 0 n-characters)
+	   do (write-sequence buffer out :start 0 :end n-characters))))))
